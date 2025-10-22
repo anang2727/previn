@@ -2,14 +2,15 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bookmark, Home, Search, Settings, Upload } from "lucide-react"
+import { History, Home, File, Settings, Upload } from "lucide-react"
 import { cn } from "@/lib/utils"
+// History
 
 const navItems = [
   { href: "/dashboard-user", label: "Home", icon: Home },
-  { href: "/dashboard-user/search", label: "Search", icon: Search },
+  { href: "/dashboard-user/files", label: "File", icon: File },
   { href: "/dashboard-user/upload", label: "Upload", icon: Upload },
-  { href: "/dashboard-user/bookmark", label: "Bookmark", icon: Bookmark },
+  { href: "/dashboard-user/history", label: "Activity", icon: History },
   { href: "/dashboard-user/setting", label: "Setting", icon: Settings },
 ]
 

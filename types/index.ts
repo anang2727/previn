@@ -7,6 +7,7 @@ export interface UploadedFile {
   uploadDate: string
   expiryDate: string
   content: string
+  isBookmarked?: boolean
 }
 
 export type ChangeEvent = React.ChangeEvent<HTMLInputElement>

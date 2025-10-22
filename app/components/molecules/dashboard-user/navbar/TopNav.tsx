@@ -3,9 +3,9 @@ import Link from "next/link"
 
 const navItems = [
   { href: "/dashboard-user", label: "Home" },
-  { href: "/dashboard-user/search", label: "Search" },
+  { href: "/dashboard-user/files", label: "File" },
   { href: "/dashboard-user/upload", label: "Upload" },
-  { href: "/dashboard-user/bookmark", label: "Bookmark" },
+  { href: "/dashboard-user/history", label: "History" },
   { href: "/dashboard-user/setting", label: "Setting" },
 ]
 
