@@ -122,11 +122,11 @@ export default function SearchPage() {
       )}
 
       {/* Header Search */}
-      <header className="rounded-xl sm:rounded-2xl border-2 border-foreground bg-gradient-to-r from-purple-50 to-pink-50 p-4 sm:p-6 shadow-md">
+      <header className="rounded-xl sm:rounded-2xl border-2 border-foreground bg-gradient-to-r from-teal-50 to-green-50 p-4 sm:p-6 shadow-md">
         <div className="space-y-3 sm:space-y-4">
           {/* Title Section */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-2 sm:p-3 bg-purple-500 rounded-lg sm:rounded-xl">
+            <div className="p-2 sm:p-3 bg-[#296374] rounded-lg sm:rounded-xl">
               <Search className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <div>
@@ -189,7 +189,7 @@ export default function SearchPage() {
           {filteredFiles.map((file) => (
             <article
               key={file.id}
-              className="rounded-xl sm:rounded-2xl border-2 border-foreground bg-white p-4 sm:p-5 shadow-[0_4px_0_0_rgba(0,0,0,1)] sm:shadow-[0_6px_0_0_rgba(0,0,0,1)] hover:shadow-[0_6px_0_0_rgba(0,0,0,1)] sm:hover:shadow-[0_8px_0_0_rgba(0,0,0,1)] transition-all hover:-translate-y-1"
+              className="rounded-xl sm:rounded-2xl border-2 border-foreground bg-white p-4 sm:p-5 transition-all hover:-translate-y-1"
             >
               {/* Header Card */}
               <div className="flex items-start justify-between mb-3">
@@ -233,31 +233,31 @@ export default function SearchPage() {
               <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                 <button
                   onClick={() => handleCopyLink(file.link, file.name)}
-                  className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg border-2 border-foreground bg-sky-300 hover:bg-sky-400 transition-colors active:scale-95"
+                  className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg border-2 border-foreground bg-white hover:bg-[#296374] text-[#296374] hover:text-white cursor-pointer transition-colors active:scale-95"
                   title="Salin link"
                 >
-                  <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-foreground" />
-                  <span className="text-[10px] sm:text-xs font-medium text-foreground">
+                  <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="text-[10px] sm:text-xs font-medium">
                     Salin
                   </span>
                 </button>
                 <button
                   onClick={() => window.open(file.link, "_blank")}
-                  className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg border-2 border-foreground bg-green-300 hover:bg-green-400 transition-colors active:scale-95"
+                  className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg border-2 border-foreground bg-white hover:bg-[#296374] text-[#296374] hover:text-white transition-colors active:scale-95"
                   title="Preview"
                 >
-                  <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-foreground" />
-                  <span className="text-[10px] sm:text-xs font-medium text-foreground">
+                  <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="text-[10px] sm:text-xs font-medium">
                     Lihat
                   </span>
                 </button>
                 <button
                   onClick={() => handleDelete(file.id, file.name)}
-                  className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg border-2 border-foreground bg-red-300 hover:bg-red-400 transition-colors active:scale-95"
+                  className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 rounded-lg border-2 border-foreground bg-white hover:bg-red-400 text-red-500 hover:text-white transition-colors active:scale-95"
                   title="Hapus"
                 >
-                  <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-foreground" />
-                  <span className="text-[10px] sm:text-xs font-medium text-foreground">
+                  <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="text-[10px] sm:text-xs font-medium">
                     Hapus
                   </span>
                 </button>

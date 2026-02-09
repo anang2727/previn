@@ -1,0 +1,32 @@
+{
+  "title": "Upload Your File",
+  "subtitle": "Upload - Make Link - Send - Preview",
+  "maxSizeText": "Max 10 MB files are allowed",
+  "allowedExtensions": "Only support .pdf, .txt, .pptx, .xlxs, .word files",
+  "plans": [
+    {
+      "id": "free",
+      "name": "Free",
+      "storage": "2 GB",
+      "duration": "1 Month",
+      "isPremium": false
+    },
+    {
+      "id": "unlimited",
+      "name": "Unlimited",
+      "storage": "100 GB",
+      "duration": "Rp.30.000",
+      "isPremium": true
+    }
+  ],
+  "visibilityOptions": [
+    {
+      "label": "Public",
+      "description": "Semua orang dapat melihat"
+    },
+    {
+      "label": "Private",
+      "description": "Hanya Anda yang dapat melihat"
+    }
+  ]
+}

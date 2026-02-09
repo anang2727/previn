@@ -1,662 +1,225 @@
-"use client"
+'use client';
+import React, { useState } from 'react';
+import { Upload, Globe, Lock, Crown, Link as LinkIcon, Eye, Copy, Trash2, Loader2, CheckCircle2, Check } from 'lucide-react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import uploadData from '@/data/upload.json';
 
-import { Upload, X, FileText, Copy, Trash2, CheckCircle, AlertCircle, Eye, MoreVertical, Zap, Star } from "lucide-react"
-import { useState, useEffect, useRef } from "react"
-// Import mammoth untuk konversi DOCX ke HTML
-import * as mammoth from "mammoth"
-// Asumsi type UploadedFile dan ChangeEvent ada di sini
-import type { UploadedFile, ChangeEvent } from "@/types/index" // Ganti dengan path yang benar jika berbeda
-
-type ExpiryLevel = "3mo" | "6mo" | "unlimited";
-
-const EXPIRY_OPTIONS: { [key in ExpiryLevel]: { label: string; months: number | null; price: string } } = {
-    "3mo": { label: "3 Bulan", months: 3, price: "Rp 50.000" },
-    "6mo": { label: "6 Bulan", months: 6, price: "Rp 90.000" },
-    "unlimited": { label: "Unlimited", months: null, price: "Rp 150.000" },
-};
-
-const STORAGE_KEY = "uploadedFiles"
-
-const getExistingFiles = (): UploadedFile[] => {
-    if (typeof window === "undefined") return []
-    const storedData = window.localStorage.getItem(STORAGE_KEY)
-
-    try {
-        const parsed = storedData ? JSON.parse(storedData) : []
-        return Array.isArray(parsed) ? parsed : []
-    } catch (error) {
-        console.error("Gagal parse LocalStorage:", error)
-        return []
-    }
+// Interface sesuai SearchPage
+interface UploadedFile {
+    id: number;
+    name: string;
+    size: string;
+    link: string;
+    uploadDate: string;
+    expiryDate: string;
+    content: string;
+    isBookmarked?: boolean;
 }
 
-const saveFileMetadata = (fileName: string, fileSize: number, fileContent: string, level: ExpiryLevel): string => {
-    const existingFiles = getExistingFiles()
-    const today = new Date()
-    let expiryDateString: string;
-    const levelData = EXPIRY_OPTIONS[level];
+const STORAGE_KEY = "uploadedFiles";
 
-    if (levelData.months !== null) {
-        const expiryDateObj = new Date(today);
-        expiryDateObj.setMonth(today.getMonth() + levelData.months);
-        expiryDateString = expiryDateObj.toLocaleDateString("id-ID");
-    } else {
-        expiryDateString = "Seumur Hidup";
-    }
+const UploadPage = () => {
+    const [selectedPlan, setSelectedPlan] = useState('free');
+    const [selectedVisibility, setSelectedVisibility] = useState('public');
+    const [file, setFile] = useState<File | null>(null);
+    const [customFileName, setCustomFileName] = useState('');
+    const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+    const [isResultModalOpen, setIsResultModalOpen] = useState(false); // Modal untuk hasil
+    const [isAgreed, setIsAgreed] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isCopied, setIsCopied] = useState(false);
+    const [resultLink, setResultLink] = useState<UploadedFile | null>(null);
 
-    const newFile: UploadedFile = {
-        id: Date.now(),
-        name: fileName,
-        size: (fileSize / 1024 / 1024).toFixed(2) + " MB",
-        link: `sinikirim.id/file-${Math.random().toString(36).substring(2, 8)}`,
-        uploadDate: today.toLocaleDateString("id-ID"),
-        expiryDate: expiryDateString,
-        content: fileContent,
-        isBookmarked: false,
-    }
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const selectedFile = e.target.files[0];
+            setFile(selectedFile);
+            setCustomFileName(selectedFile.name.split('.')[0]);
+        }
+    };
 
-    existingFiles.unshift(newFile)
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(existingFiles))
-    return newFile.link
-}
+    const handleCopy = async (text: string) => {
+        if (navigator.clipboard && window.isSecureContext) {
+            try {
+                await navigator.clipboard.writeText(text);
+                setIsCopied(true);
+                setTimeout(() => setIsCopied(false), 2000);
+                return;
+            } catch (err) { }
+        }
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+    };
 
-const deleteFile = (id: number) => {
-    const existingFiles = getExistingFiles()
-    const filtered = existingFiles.filter((file) => file.id !== id)
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered))
-}
+    const processUpload = () => {
+        setIsConfigModalOpen(false);
+        setIsLoading(true);
 
-const toggleBookmark = (id: number) => {
-    const existingFiles = getExistingFiles()
-    const updated = existingFiles.map((file) =>
-        file.id === id ? { ...file, isBookmarked: !file.isBookmarked } : file
-    )
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
-}
+        setTimeout(() => {
+            const storedData = window.localStorage.getItem(STORAGE_KEY);
+            const existingFiles: UploadedFile[] = storedData ? JSON.parse(storedData) : [];
 
-interface Toast {
-    id: string
-    type: "success" | "error" | "info"
-    message: string
-}
+            const newFileData: UploadedFile = {
+                id: Date.now(),
+                name: `${customFileName}.${file?.name.split('.').pop()}`,
+                size: file ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : "0 MB",
+                link: `https://yourdomain.com/preview/${Date.now()}`,
+                uploadDate: new Date().toLocaleDateString('id-ID'),
+                expiryDate: selectedPlan === 'free' ? "24 Jam" : "Tak Terbatas",
+                content: `File ${selectedVisibility}`,
+                isBookmarked: false
+            };
 
-const Toast = ({ toast, onClose }: { toast: Toast; onClose: () => void }) => {
-    useEffect(() => {
-        const timer = setTimeout(onClose, 4000)
-        return () => clearTimeout(timer)
-    }, [onClose])
+            const updatedFiles = [newFileData, ...existingFiles];
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFiles));
 
-    const bgColor = {
-        success: "bg-emerald-500",
-        error: "bg-red-500",
-        info: "bg-blue-500",
-    }[toast.type]
-
-    const Icon = toast.type === "success" ? CheckCircle : AlertCircle
+            setResultLink(newFileData);
+            setIsLoading(false);
+            setFile(null);
+            setIsResultModalOpen(true); // BUKA MODAL HASIL DISINI
+        }, 3000);
+    };
 
     return (
-        <div
-            className={`${bgColor} text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300`}
-        >
-            <Icon className="h-5 w-5 flex-shrink-0" />
-            <p className="font-medium">{toast.message}</p>
-        </div>
-    )
-}
-
-interface PreviewModalProps {
-    file: UploadedFile | null
-    onClose: () => void
-}
-
-const PreviewModal = ({ file, onClose }: PreviewModalProps) => {
-    if (!file) return null
-
-    const getFileType = (fileName: string) => {
-        const ext = fileName.split(".").pop()?.toLowerCase()
-        if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext || "")) return "image"
-        if (ext === "pdf") return "pdf"
-        if (["docx"].includes(ext || "")) return "html"
-        if (["txt", "md", "json", "csv", "xml", "doc", "ppt", "pptx"].includes(ext || "")) return "text"
-        return "other"
-    }
-
-    const fileType = getFileType(file.name)
-    const isImage = fileType === "image"
-    const isPdf = fileType === "pdf"
-    const isHtmlDocx = fileType === "html"
-    const isWarningContent = file.content?.startsWith('[PERINGATAN BINARY]') || file.content?.startsWith('[ERROR PREVIEW]');
-
-
-    if (!file.content) {
-        return (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
-                <div
-                    className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 animate-in fade-in zoom-in-95 duration-300"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <div className="flex items-center gap-3 mb-4">
-                        <AlertCircle className="h-6 w-6 text-red-500" />
-                        <h3 className="font-bold text-lg text-foreground">Preview Gagal</h3>
-                    </div>
-                    <p className="text-sm text-gray-600">Konten file tidak dapat ditampilkan. Ini mungkin karena file terlalu besar atau format file tidak dapat diurai di sisi klien.</p>
-                    <button onClick={onClose} className="mt-4 w-full bg-gray-200 text-gray-800 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors">Tutup</button>
-                </div>
+        <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-4 font-sans -mt-20">
+            <div className="text-center mb-6">
+                <h1 className="text-4xl font-bold tracking-tight text-slate-900 mb-2">{uploadData.title}</h1>
+                <p className="text-slate-500 font-medium">{uploadData.subtitle}</p>
             </div>
-        )
-    }
 
-    return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
-            <div
-                className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-auto animate-in fade-in zoom-in-95 duration-300 flex flex-col"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between z-10">
-                    <h3 className="font-bold text-lg text-foreground truncate">{file.name}</h3>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                        <X className="h-5 w-5 text-gray-600" />
-                    </button>
-                </div>
-
-                <div className="flex-1 overflow-auto p-6">
-                    {isImage && file.content ? (
-                        <div className="flex items-center justify-center">
-                            <img
-                                src={file.content}
-                                alt={file.name}
-                                className="max-w-full max-h-96 rounded-lg shadow-md"
-                            />
-                        </div>
-                    ) :
-                        isPdf && file.content ? (
-                            <div
-                                className="flex items-center justify-center bg-gray-100 rounded-lg overflow-hidden"
-                                style={{ height: "600px" }}
-                            >
-                                <embed src={file.content} type="application/pdf" width="100%" height="100%" className="rounded-lg" />
+            <Card className="w-full max-w-3xl border-2 rounded-3xl border-foreground bg-white overflow-hidden">
+                <CardContent className="p-6 md:p-8">
+                    <div className="relative group cursor-pointer">
+                        <div className={`border-2 border-dashed rounded-2xl p-10 transition-all flex flex-col items-center justify-center text-center ${file ? 'border-green-500 bg-green-50' : 'border-[#296374] bg-[#296374]/10 hover:bg-[#296374]/20'}`}>
+                            <div className={`${file ? 'bg-green-500' : 'bg-[#296374]'} p-3 rounded-full mb-3 shadow-lg`}>
+                                {file ? <CheckCircle2 className="w-6 h-6 text-white" /> : <Upload className="w-6 h-6 text-white" />}
                             </div>
-                        ) :
-                            isHtmlDocx && file.content ? (
-                                <div className="bg-gray-50 rounded-lg p-6 overflow-auto max-h-96 border border-gray-200">
-                                    <div className="prose max-w-none break-words" dangerouslySetInnerHTML={{ __html: file.content }} />
-                                </div>
-                            ) : (
-                                <div className="bg-gray-50 rounded-lg p-4 font-mono text-sm overflow-auto max-h-96 border border-gray-200">
-                                    {isWarningContent && (
-                                        <h4 className={`font-bold text-base mb-2 ${file.content.startsWith('[ERROR PREVIEW]') ? 'text-red-600' : 'text-yellow-600'}`}>
-                                            {file.content.startsWith('[ERROR PREVIEW]') ? '⚠️ Gagal Mengurai Dokumen' : '🚨 Preview Teks Mentah (Nty)'}
-                                        </h4>
-                                    )}
-                                    <pre className="whitespace-pre-wrap break-words text-foreground">
-                                        {file.content.length > 5000
-                                            ? "Konten file terlalu panjang untuk ditampilkan sebagai teks penuh. Hanya beberapa karakter pertama yang dibaca: " + file.content.substring(0, 500) + "..."
-                                            : file.content
-                                        }
-                                    </pre>
-                                </div>
-                            )}
-                </div>
-            </div>
-        </div>
-    )
-}
-
-interface FileActionsMenuProps {
-    file: UploadedFile
-    onPreview: () => void
-    onCopy: () => void
-    onDelete: () => void
-    onBookmark: () => void
-    isOpen: boolean
-    onToggle: () => void
-}
-
-const FileActionsMenu = ({ file, onPreview, onCopy, onDelete, onBookmark, isOpen, onToggle }: FileActionsMenuProps) => {
-    const menuRef = useRef<HTMLDivElement>(null)
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                onToggle()
-            }
-        }
-
-        if (isOpen) {
-            document.addEventListener("mousedown", handleClickOutside)
-            return () => document.removeEventListener("mousedown", handleClickOutside)
-        }
-    }, [isOpen, onToggle])
-
-    return (
-        <div ref={menuRef} className="relative">
-            <button
-                onClick={onToggle}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors md:hidden"
-                title="Lebih banyak aksi"
-            >
-                <MoreVertical className="h-4 w-4 text-gray-600" />
-            </button>
-
-            {isOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-40 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <button
-                        onClick={() => {
-                            onBookmark()
-                            onToggle()
-                        }}
-                        className="w-full text-left px-4 py-3 hover:bg-yellow-50 transition-colors flex items-center gap-2 border-b border-gray-100"
-                    >
-                        <Star className={`h-4 w-4 ${file.isBookmarked ? 'fill-yellow-500 text-yellow-500' : 'text-gray-400'}`} />
-                        <span className="text-sm font-medium text-foreground">
-                            {file.isBookmarked ? 'Hapus Bookmark' : 'Bookmark'}
-                        </span>
-                    </button>
-                    <button
-                        onClick={() => {
-                            onPreview()
-                            onToggle()
-                        }}
-                        className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors flex items-center gap-2 border-b border-gray-100"
-                    >
-                        <Eye className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm font-medium text-foreground">Preview</span>
-                    </button>
-                    <button
-                        onClick={() => {
-                            onCopy()
-                            onToggle()
-                        }}
-                        className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors flex items-center gap-2 border-b border-gray-100"
-                    >
-                        <Copy className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm font-medium text-foreground">Salin Link</span>
-                    </button>
-                    <button
-                        onClick={() => {
-                            onDelete()
-                            onToggle()
-                        }}
-                        className="w-full text-left px-4 py-3 hover:bg-red-50 transition-colors flex items-center gap-2"
-                    >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                        <span className="text-sm font-medium text-red-600">Hapus</span>
-                    </button>
-                </div>
-            )}
-        </div>
-    )
-}
-
-
-export default function UploadPage() {
-    const [selectedFile, setSelectedFile] = useState<File | null>(null)
-    const [isUploading, setIsUploading] = useState<boolean>(false)
-    const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
-    const [toast, setToast] = useState<Toast | null>(null)
-    const [previewFile, setPreviewFile] = useState<UploadedFile | null>(null)
-    const [openMenuId, setOpenMenuId] = useState<number | null>(null)
-    const [expiryLevel, setExpiryLevel] = useState<ExpiryLevel>("3mo")
-    const [showBookmarked, setShowBookmarked] = useState<boolean>(false)
-
-    const MAX_SIZE_BYTES = 20 * 1024 * 1024
-
-    useEffect(() => {
-        setUploadedFiles(getExistingFiles())
-    }, [])
-
-    const showToast = (type: "success" | "error" | "info", message: string) => {
-        setToast({
-            id: Date.now().toString(),
-            type,
-            message,
-        })
-    }
-
-    const handleFileChange = (event: ChangeEvent) => {
-        const file = event.target.files?.[0]
-
-        if (file) {
-            if (file.size > MAX_SIZE_BYTES) {
-                showToast("error", "File terlalu besar! Maksimal 20 MB.")
-                setSelectedFile(null)
-                return
-            }
-
-            const allowedExtensions = /\.(pdf|ppt|pptx|doc|docx|jpg|jpeg|png|txt|md|json)$/i;
-            if (!file.type.match(/(pdf|presentation|document|image|text)/) && !file.name.match(allowedExtensions)) {
-                showToast("error", "Tipe file tidak didukung! Hanya PDF, PPT, DOC, Gambar, atau Text.")
-                setSelectedFile(null)
-                return
-            }
-            setSelectedFile(file)
-        }
-    }
-
-    const readFileContent = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader()
-            reader.onerror = reject
-
-            const fileNameLower = file.name.toLowerCase();
-
-            if (fileNameLower.endsWith('.docx')) {
-                reader.onload = async (e) => {
-                    try {
-                        const arrayBuffer = e.target?.result as ArrayBuffer;
-
-                        const options = {
-                            convertImage: mammoth.images.imgElement(function (image) {
-                                return image.read("base64").then(function (imageBuffer) {
-                                    return {
-                                        src: "data:" + image.contentType + ";base64," + imageBuffer
-                                    };
-                                });
-                            })
-                        };
-
-                        const result = await mammoth.convertToHtml({ arrayBuffer }, options);
-                        resolve(result.value);
-                    } catch (error: any) {
-                        console.error("Mammoth error (DOCX):", error);
-                        resolve(`[ERROR PREVIEW] Gagal menguraikan file DOCX. Ini mungkin bukan format DOCX yang valid atau file rusak. Detail: ${error.message}`);
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-            }
-            else if (file.type.startsWith("image/") || file.type === "application/pdf") {
-                reader.onload = (e) => resolve(e.target?.result as string)
-                reader.readAsDataURL(file)
-            }
-            else {
-                reader.onload = (e) => {
-                    const content = e.target?.result as string;
-                    if (fileNameLower.endsWith('.pptx') || fileNameLower.endsWith('.ppt') || fileNameLower.endsWith('.doc')) {
-                        resolve(`[PERINGATAN BINARY] Format ${fileNameLower.toUpperCase()} adalah file biner kompleks. Preview ini hanya menampilkan teks mentah yang tidak dapat dibaca ('Nty' / PK...). Harap unduh file untuk melihat konten sebenarnya. \n\n Konten Mentah Awal: \n\n ${content}`);
-                    } else {
-                        resolve(content);
-                    }
-                }
-                reader.readAsText(file)
-            }
-        })
-    }
-
-    const handleUpload = async () => {
-        if (!selectedFile) {
-            showToast("error", "Pilih file dulu sebelum upload!")
-            return
-        }
-
-        if (selectedFile.size > 5 * 1024 * 1024) {
-            showToast("info", "File Anda besar. Preview mungkin gagal karena batasan penyimpanan browser.")
-        }
-
-        setIsUploading(true)
-
-        try {
-            const fileContent = await readFileContent(selectedFile)
-
-            setTimeout(() => {
-                if (selectedFile) {
-                    try {
-                        saveFileMetadata(selectedFile.name, selectedFile.size, fileContent, expiryLevel)
-
-                        setUploadedFiles(getExistingFiles())
-                        showToast("success", `File "${selectedFile.name}" berhasil diupload!`)
-                    } catch (e) {
-                        if (e instanceof DOMException && e.name === "QuotaExceededError") {
-                            showToast("error", "Konten file terlalu besar. Hanya metadata yang tersimpan (link).")
-                        } else {
-                            showToast("error", "Gagal menyimpan file metadata.")
-                        }
-                    } finally {
-                        setSelectedFile(null)
-                        setIsUploading(false)
-                    }
-                }
-            }, 1500)
-        } catch (error) {
-            console.error("Error reading file:", error)
-            showToast("error", "Gagal membaca file!")
-            setIsUploading(false)
-        }
-    }
-
-    const handleDeleteFile = (id: number, fileName: string) => {
-        deleteFile(id)
-        setUploadedFiles(getExistingFiles())
-        showToast("info", `File "${fileName}" telah dihapus.`)
-    }
-
-    const handleCopyLink = (link: string) => {
-        navigator.clipboard.writeText(link)
-        showToast("success", "Link disalin ke clipboard!")
-    }
-
-    const handleToggleBookmark = (id: number, fileName: string, isCurrentlyBookmarked: boolean) => {
-        toggleBookmark(id)
-        setUploadedFiles(getExistingFiles())
-        showToast("success", isCurrentlyBookmarked ? `Bookmark "${fileName}" dihapus` : `"${fileName}" ditambahkan ke bookmark`)
-    }
-
-    const formatBytes = (bytes: number) => {
-        if (bytes === 0) return "0 Bytes"
-        const k = 1024
-        const sizes = ["Bytes", "KB", "MB"]
-        const i = Math.floor(Math.log(bytes) / Math.log(k))
-        return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
-    }
-
-    const filteredFiles = showBookmarked
-        ? uploadedFiles.filter(file => file.isBookmarked)
-        : uploadedFiles
-
-    const bookmarkedCount = uploadedFiles.filter(f => f.isBookmarked).length
-
-    return (
-        <section className="space-y-8 mx-4 md:mx-0 py-8 pb-24 md:pb-10">
-            {toast && (
-                <div className="fixed top-4 right-4 z-50">
-                    <Toast toast={toast} onClose={() => setToast(null)} />
-                </div>
-            )}
-
-            <PreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />
-
-            <header className="rounded-2xl border-2 border-foreground bg-gradient-to-r from-blue-50 to-indigo-50 p-6 shadow-md">
-                <div className="flex items-center gap-3">
-                    <div className="p-3 bg-yellow-500 rounded-xl">
-                        <Upload className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-3xl font-bold text-foreground">Unggah Dokumen</h1>
-                        <p className="text-sm text-foreground/60 mt-1">Bagikan file Anda dengan aman dan mudah</p>
-                    </div>
-                </div>
-            </header>
-
-            <div className="rounded-2xl border-2 border-foreground bg-white p-8 shadow-md">
-                <div className="flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed border-blue-300 bg-blue-50 p-12">
-                    <div className="inline-flex items-center gap-2 text-gray-800 px-4 py-2">
-                        <Upload className="h-4 w-4" />
-                        <span className="text-sm font-medium">Pilih File Dokumen</span>
-                    </div>
-
-                    <label
-                        htmlFor="file-upload"
-                        className="cursor-pointer rounded-lg border-2 border-gray-700 bg-sky-400 text-white px-6 py-3 font-semibold hover:shadow-lg transition-all hover:scale-105 active:scale-95"
-                    >
-                        {selectedFile ? "📁 Pilih File Lain" : "📁 Pilih Dokumen"}
-                    </label>
-                    <input id="file-upload" type="file" onChange={handleFileChange} disabled={isUploading} className="sr-only" />
-
-                    <p className="text-xs text-foreground/60 text-center">
-                        Maksimal <span className="font-semibold">20 MB</span>. Format: PDF, DOCX, DOC, PPTX, Gambar, atau Text.
-                    </p>
-                </div>
-
-                {selectedFile && (
-                    <div className="mt-8 space-y-6 animate-in fade-in duration-300">
-                        <h2 className="text-lg font-bold text-foreground">File Terpilih:</h2>
-
-                        <div className="flex items-center justify-between rounded-xl border border-gray-800 p-5">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-white rounded-lg">
-                                    <FileText className="h-6 w-6 text-white" />
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-foreground">{selectedFile.name}</p>
-                                    <p className="text-sm text-foreground/60">{formatBytes(selectedFile.size)}</p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => setSelectedFile(null)}
-                                disabled={isUploading}
-                                className="p-2 hover:bg-red-100 rounded-lg transition-colors"
-                            >
-                                <X className="h-5 w-5 text-red-500" />
-                            </button>
+                            <p className="text-lg font-medium text-slate-700">
+                                {file ? file.name : <span>Drag file(s) or <span className="text-[#296374] font-semibold underline">browse</span></span>}
+                            </p>
                         </div>
+                        <input type="file" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
+                    </div>
 
-                        <div className="space-y-4">
-                            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                                <Zap className="h-5 w-5 text-yellow-600" />
-                                Pilih Masa Berlaku Link:
-                            </h2>
-                            <div className="grid grid-cols-3 gap-4">
-                                {(Object.keys(EXPIRY_OPTIONS) as ExpiryLevel[]).map((key) => (
-                                    <button
-                                        key={key}
-                                        onClick={() => setExpiryLevel(key)}
-                                        className={`rounded-xl p-4 transition-all border-2 ${expiryLevel === key
-                                                ? "border-blue-500 bg-blue-50 shadow-md"
-                                                : "border-gray-200 bg-white hover:border-gray-400"
-                                            }`}
-                                        disabled={isUploading}
-                                    >
-                                        <p className="font-bold text-base text-foreground">
-                                            {EXPIRY_OPTIONS[key].label}
-                                        </p>
-                                        <p className="text-sm text-blue-600 font-semibold mt-1">
-                                            {EXPIRY_OPTIONS[key].price}
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            {key === "unlimited" ? "Selamanya" : "Perlu Beli"}
-                                        </p>
-                                    </button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-6">
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-slate-700">Select Plan</label>
+                            <div className="space-y-3">
+                                {uploadData.plans.map((plan) => (
+                                    <label key={plan.id} className="flex items-center justify-between cursor-pointer">
+                                        <div className="flex items-center gap-2">
+                                            <input type="radio" name="plan" checked={selectedPlan === plan.id} onChange={() => setSelectedPlan(plan.id)} className="accent-[#296374]" />
+                                            <div className="flex flex-col">
+                                                <span className="text-sm text-slate-700 font-medium flex items-center gap-1">{plan.name} {plan.isPremium && <Crown className="w-3.5 h-3.5 text-amber-500" />}</span>
+                                                <span className="text-[11px] text-slate-400">Kapasitas: {plan.storage}</span>
+                                            </div>
+                                        </div>
+                                        <span className="text-sm text-slate-500">{plan.duration}</span>
+                                    </label>
                                 ))}
                             </div>
                         </div>
 
-
-                        <button
-                            type="button"
-                            onClick={handleUpload}
-                            disabled={isUploading}
-                            className={`w-full rounded-xl py-4 text-lg font-bold transition-all ${!isUploading
-                                    ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg hover:scale-105 active:scale-95"
-                                    : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                                }`}
-                        >
-                            {isUploading ? "⏳ Mengunggah..." : "✨ Buat Link Sekarang!"}
-                        </button>
-                    </div>
-                )}
-            </div>
-
-            {uploadedFiles.length > 0 && (
-                <div className="rounded-2xl border-2 border-foreground bg-white p-8 shadow-md">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold text-foreground">📋 Riwayat Upload</h2>
-                        <button
-                            onClick={() => setShowBookmarked(!showBookmarked)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${showBookmarked
-                                    ? 'bg-yellow-500 text-white shadow-md'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
-                        >
-                            <Star className={`h-4 w-4 ${showBookmarked ? 'fill-white' : ''}`} />
-                            <span className="font-medium text-sm">
-                                {showBookmarked ? 'Semua File' : `Bookmark (${bookmarkedCount})`}
-                            </span>
-                        </button>
-                    </div>
-
-                    <div className="space-y-3">
-                        {filteredFiles.map((file) => (
-                            <div
-                                key={file.id}
-                                className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-4 hover:bg-gray-100 transition-colors"
-                            >
-                                <div className="flex items-center gap-4 flex-1 min-w-0">
-                                    <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-2">
-                                            <p className="font-medium text-foreground truncate">{file.name}</p>
-                                            {file.isBookmarked && (
-                                                <Star className="h-4 w-4 fill-yellow-500 text-yellow-500 flex-shrink-0" />
-                                            )}
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-slate-700">Visibility</label>
+                            <div className="space-y-3">
+                                {uploadData.visibilityOptions.map((opt, i) => (
+                                    <label key={i} className="flex items-start gap-2 cursor-pointer">
+                                        <input type="radio" name="visibility" checked={selectedVisibility === opt.label.toLowerCase()} onChange={() => setSelectedVisibility(opt.label.toLowerCase())} className="mt-1 accent-[#296374]" />
+                                        <div className="flex flex-col">
+                                            <div className="flex items-center gap-1.5 text-sm font-medium text-slate-700">
+                                                {opt.label === 'Public' ? <Globe className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />} {opt.label}
+                                            </div>
+                                            <span className="text-[11px] text-slate-500 leading-tight">({opt.description})</span>
                                         </div>
-                                        <p className="text-xs text-foreground/60">
-                                            {file.uploadDate} • Kadaluarsa: {file.expiryDate}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="hidden md:flex items-center gap-2 flex-shrink-0">
-                                    <button
-                                        onClick={() => handleToggleBookmark(file.id, file.name, file.isBookmarked || false)}
-                                        className="p-2 hover:bg-yellow-100 rounded-lg transition-colors"
-                                        title={file.isBookmarked ? "Hapus bookmark" : "Bookmark file"}
-                                    >
-                                        <Star className={`h-4 w-4 ${file.isBookmarked ? 'fill-yellow-500 text-yellow-500' : 'text-gray-400'}`} />
-                                    </button>
-                                    <button
-                                        onClick={() => setPreviewFile(file)}
-                                        className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
-                                        title="Preview file"
-                                    >
-                                        <Eye className="h-4 w-4 text-blue-500" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleCopyLink(file.link)}
-                                        className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
-                                        title="Salin link"
-                                    >
-                                        <Copy className="h-4 w-4 text-blue-500" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDeleteFile(file.id, file.name)}
-                                        className="p-2 hover:bg-red-100 rounded-lg transition-colors"
-                                        title="Hapus file"
-                                    >
-                                        <Trash2 className="h-4 w-4 text-red-500" />
-                                    </button>
-                                </div>
-
-                                <FileActionsMenu
-                                    file={file}
-                                    onPreview={() => setPreviewFile(file)}
-                                    onCopy={() => handleCopyLink(file.link)}
-                                    onDelete={() => handleDeleteFile(file.id, file.name)}
-                                    onBookmark={() => handleToggleBookmark(file.id, file.name, file.isBookmarked || false)}
-                                    isOpen={openMenuId === file.id}
-                                    onToggle={() => setOpenMenuId(openMenuId === file.id ? null : file.id)}
-                                />
+                                    </label>
+                                ))}
                             </div>
-                        ))}
+                        </div>
                     </div>
-                </div>
-            )}
 
-            {uploadedFiles.length === 0 && (
-                <div className="rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 p-12 text-center">
-                    <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-foreground/60 font-medium">Belum ada file yang diupload</p>
-                    <p className="text-sm text-foreground/40 mt-1">Upload file pertama Anda untuk melihat riwayat di sini</p>
-                </div>
-            )}
-        </section>
-    )
-}
+                    <Button
+                        disabled={!file || isLoading}
+                        onClick={() => setIsConfigModalOpen(true)}
+                        className="w-full mt-6 py-6 rounded-xl border-foreground bg-[#296374] hover:bg-[#1e4a57] text-white font-bold text-lg"
+                    >
+                        {isLoading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <LinkIcon className="w-5 h-5 mr-2" />}
+                        {isLoading ? "Generating Link..." : "Make Link"}
+                    </Button>
+                </CardContent>
+            </Card>
+
+            {/* MODAL 1: KONFIGURASI */}
+            <Dialog open={isConfigModalOpen} onOpenChange={setIsConfigModalOpen}>
+                <DialogContent className="sm:max-w-md rounded-2xl">
+                    <DialogHeader><DialogTitle>Konfigurasi File</DialogTitle></DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Nama Preview File</label>
+                            <Input value={customFileName} onChange={(e) => setCustomFileName(e.target.value)} placeholder="Nama file..." />
+                        </div>
+                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2">
+                            <p className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Syarat & Ketentuan</p>
+                            <p className="text-[12px] text-slate-600 leading-relaxed italic">
+                                Dengan melanjutkan, saya menyatakan secara sadar bahwa file yang diunggah tidak mengandung malware, virus, atau konten berbahaya lainnya yang melanggar hukum. Saya bertanggung jawab penuh atas seluruh isi dokumen ini.
+                            </p>
+                            <div className="flex items-center space-x-2 pt-2">
+                                <Checkbox id="terms" checked={isAgreed} onCheckedChange={(val) => setIsAgreed(val as boolean)} />
+                                <label htmlFor="terms" className="text-xs font-medium cursor-pointer">Saya setuju</label>
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsConfigModalOpen(false)}>Batal</Button>
+                        <Button disabled={!isAgreed || !customFileName} onClick={processUpload} className="bg-[#296374]">Konfirmasi</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* MODAL 2: HASIL LINK (Card di dalam Modal) */}
+            <Dialog open={isResultModalOpen} onOpenChange={setIsResultModalOpen}>
+                <DialogContent className="sm:max-w-md rounded-2xl">
+                    <DialogHeader><DialogTitle>Link Ready!</DialogTitle></DialogHeader>
+                    {resultLink && (
+                        <div className="p-4 bg-teal-50 border-2 border-teal-100 rounded-2xl flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-teal-600 p-2 rounded-lg text-white"><Eye className="w-4 h-4" /></div>
+                                <div>
+                                    <p className="text-sm font-bold text-slate-800 truncate max-w-[150px]">{resultLink.name}</p>
+                                    <p className="text-[10px] text-teal-600 font-medium uppercase">Ready to Preview</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button size="icon" variant="outline" className="h-8 w-8 rounded-md" onClick={() => handleCopy(resultLink.link)}>
+                                    {isCopied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                                </Button>
+                                <Button size="icon" variant="outline" onClick={() => setIsResultModalOpen(false)} className="h-8 w-8 rounded-md text-red-500 hover:bg-red-50">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                    <Button className="w-full bg-slate-900 text-white" onClick={() => setIsResultModalOpen(false)}>Tutup</Button>
+                </DialogContent>
+            </Dialog>
+        </div>
+    );
+};
+
+export default UploadPage;
