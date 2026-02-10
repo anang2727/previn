@@ -1,0 +1,52 @@
+{
+  "header": {
+    "brandLogo": "D",
+    "brandName": "Prev-In"
+  },
+  "form": {
+    "title": "Buat Akun Baru",
+    "subtitle": "Daftar sekarang dan mulai bagikan dokumen dengan mudah",
+    "fullName": {
+      "label": "Nama Lengkap",
+      "placeholder": "Nama Anda"
+    },
+    "email": {
+      "label": "Email",
+      "placeholder": "nama@example.com"
+    },
+    "password": {
+      "label": "Password",
+      "placeholder": "••••••••",
+      "hint": "Minimal 8 karakter, kombinasi huruf dan angka"
+    },
+    "confirmPassword": {
+      "label": "Konfirmasi Password",
+      "placeholder": "••••••••"
+    },
+    "agreeTerms": {
+      "text": "Saya setuju dengan",
+      "linkText": "Syarat dan Ketentuan"
+    },
+    "submitButton": "Buat Akun",
+    "dividerText": "Atau daftar dengan"
+  },
+  "socialAuth": {
+    "google": {
+      "label": "Daftar dengan Google"
+    },
+    "facebook": {
+      "label": "Daftar dengan Facebook"
+    },
+    "x": {
+      "label": "Daftar dengan X"
+    }
+  },
+  "signIn": {
+    "text": "Sudah punya akun?",
+    "link": "Masuk di sini"
+  },
+  "illustration": {
+    "title": "Mulai Bagikan Dokumen Hari Ini",
+    "description": "Dapatkan akses ke fitur lengkap Prev-In dan mulai berbagi dokumen dengan cara yang lebih modern dan efisien"
+  }
+}

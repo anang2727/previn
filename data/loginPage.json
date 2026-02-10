@@ -1,0 +1,43 @@
+{
+  "header": {
+    "brandLogo": "D",
+    "brandName": "Prev-In"
+  },
+  "form": {
+    "title": "Selamat Kembali",
+    "subtitle": "Masuk ke akun Anda untuk berbagi dokumen",
+    "email": {
+      "label": "Email",
+      "placeholder": "nama@example.com"
+    },
+    "password": {
+      "label": "Password",
+      "placeholder": "••••••••",
+      "forgotPasswordText": "Lupa password?"
+    },
+    "rememberMe": {
+      "label": "Ingat saya"
+    },
+    "submitButton": "Masuk",
+    "dividerText": "Atau masuk dengan"
+  },
+  "socialAuth": {
+    "google": {
+      "label": "Masuk dengan Google"
+    },
+    "facebook": {
+      "label": "Masuk dengan Facebook"
+    },
+    "x": {
+      "label": "Masuk dengan X"
+    }
+  },
+  "signUp": {
+    "text": "Belum punya akun?",
+    "link": "Daftar di sini"
+  },
+  "illustration": {
+    "title": "Berbagi Dokumen Lebih Mudah",
+    "description": "Upload, bagikan, dan lihat preview dokumen Anda tanpa perlu download atau install software"
+  }
+}

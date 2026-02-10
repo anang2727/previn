@@ -1,0 +1,115 @@
+{
+  "header": {
+    "brandLogo": "D",
+    "brandName": "Prev-In",
+    "loginText": "Login",
+    "registerText": "Register"
+  },
+  "hero": {
+    "badge": "Platform Preview Dokumen Modern",
+    "title": "Bagikan & Preview",
+    "titleHighlight": "Dokumen",
+    "titleSuffix": "Dengan Mudah",
+    "description": "Upload dokumen Anda, dapatkan link untuk dibagikan, dan biarkan siapa saja melihat preview langsung tanpa perlu download. Semudah itu.",
+    "primaryButtonText": "Mulai Sekarang",
+    "secondaryButtonText": "Lihat Demo",
+    "userCount": "1000+",
+    "userCountText": "pengguna sudah mempercayai Prev-In",
+    "illustrationAlt": "Document preview illustration"
+  },
+  "caraKerja": {
+    "title": "Cara Kerja",
+    "titleHighlight": "Prev-In",
+    "subtitle": "Tiga langkah sederhana untuk berbagi dokumen dengan cara yang lebih modern dan efisien",
+    "cards": [
+      {
+        "number": "01",
+        "title": "Upload Mudah",
+        "description": "Upload dokumen Word, PDF, Excel, dan format lainnya dengan cepat dan aman.",
+        "imageAlt": "Upload dokumen",
+        "imageSrc": "/upload-flat.jpg"
+      },
+      {
+        "number": "02",
+        "title": "Generate Link Instan",
+        "description": "Dapatkan link unik untuk setiap dokumen yang dapat dibagikan dengan mudah.",
+        "imageAlt": "Generate link instan",
+        "imageSrc": "/link-flat.jpg"
+      },
+      {
+        "number": "03",
+        "title": "Preview Langsung",
+        "description": "Lihat dokumen langsung di browser tanpa perlu download atau install aplikasi.",
+        "imageAlt": "Preview langsung",
+        "imageSrc": "/preview-flat.jpg"
+      }
+    ]
+  },
+  "benefits": {
+    "title": "Mengapa Memilih Prev-In?",
+    "description": "Prev-In memberikan solusi modern untuk berbagi dan melihat dokumen tanpa hambatan. Tidak perlu repot download file atau install software khusus.",
+    "features": [
+      "Akses dokumen dari mana saja",
+      "Tidak perlu install software tambahan",
+      "Berbagi dengan aman dan mudah",
+      "Preview real-time di browser"
+    ],
+    "stats": [
+      {
+        "value": "100%",
+        "label": "Gratis"
+      },
+      {
+        "value": "10+",
+        "label": "Format File"
+      },
+      {
+        "icon": "eye",
+        "title": "Instant",
+        "label": "Preview"
+      },
+      {
+        "icon": "share2",
+        "title": "Secure",
+        "label": "Link Sharing"
+      }
+    ]
+  },
+  "cta": {
+    "title": "Siap Mencoba",
+    "titleHighlight": "Prev-In?",
+    "description": "Bergabunglah dengan ribuan pengguna yang sudah merasakan kemudahan berbagi dan preview dokumen dengan Prev-In",
+    "buttonText": "Daftar Gratis Sekarang"
+  },
+  "footer": {
+    "brandLogo": "D",
+    "brandName": "Prev-In",
+    "brandDescription": "Platform modern untuk berbagi dan preview dokumen dengan cara yang lebih mudah dan efisien.",
+    "sections": {
+      "produk": {
+        "title": "Produk",
+        "links": [
+          { "text": "Fitur", "href": "#" },
+          { "text": "Harga", "href": "#" },
+          { "text": "Demo", "href": "#" }
+        ]
+      },
+      "perusahaan": {
+        "title": "Perusahaan",
+        "links": [
+          { "text": "Tentang Kami", "href": "#" },
+          { "text": "Blog", "href": "#" },
+          { "text": "Kontak", "href": "#" }
+        ]
+      },
+      "legal": {
+        "title": "Legal",
+        "links": [
+          { "text": "Privacy Policy", "href": "#" },
+          { "text": "Terms of Service", "href": "#" }
+        ]
+      }
+    }, 
+    "copyright": "© 2024 Prev-In. All rights reserved."
+  }
+}
