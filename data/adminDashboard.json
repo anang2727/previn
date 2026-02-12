@@ -1,0 +1,121 @@
+{
+  "sidebarGroups": [
+    {
+      "name": "ANALYTICS & MONITORING",
+      "items": [
+        {
+          "id": "dashboard-overview",
+          "label": "Dashboard Overview",
+          "icon": "Home",
+          "href": "/dashboard-admin"
+        },
+        {
+          "id": "traffic-analytics",
+          "label": "Traffic Analytics",
+          "icon": "BarChart3",
+          "href": "/dashboard-admin/traffic-analytics"
+        }
+      ]
+    },
+    {
+      "name": "FILE & STORAGE MANAGEMENT",
+      "items": [
+        {
+          "id": "all-files",
+          "label": "All Files",
+          "icon": "FileText",
+          "href": "/dashboard-admin/all-files"
+        },
+        {
+          "id": "share-links",
+          "label": "Share Link Manager",
+          "icon": "Link2",
+          "href": "/dashboard-admin/share-links"
+        },
+        {
+          "id": "storage-status",
+          "label": "Storage Status",
+          "icon": "HardDrive",
+          "href": "/dashboard-admin/storage-status"
+        }
+      ]
+    },
+    {
+      "name": "USER CONTROL",
+      "items": [
+        {
+          "id": "user-directory",
+          "label": "User Directory",
+          "icon": "Users",
+          "href": "/dashboard-admin/user-directory"
+        },
+        {
+          "id": "membership-quota",
+          "label": "Membership & Quota",
+          "icon": "CreditCard",
+          "href": "/dashboard-admin/membership-quota"
+        },
+        {
+          "id": "banned-suspended",
+          "label": "Banned & Suspended",
+          "icon": "Ban",
+          "href": "/dashboard-admin/banned-suspended"
+        }
+      ]
+    },
+    {
+      "name": "SECURITY & MODERATION",
+      "items": [
+        {
+          "id": "abuse-reports",
+          "label": "Abuse Reports",
+          "icon": "AlertTriangle",
+          "href": "/dashboard-admin/abuse-reports"
+        },
+        {
+          "id": "activity-logs",
+          "label": "Activity Logs",
+          "icon": "FileCheck",
+          "href": "/dashboard-admin/activity-logs"
+        }
+      ]
+    },
+    {
+      "name": "SYSTEM CONFIGURATION",
+      "items": [
+        {
+          "id": "site-settings",
+          "label": "Site Settings",
+          "icon": "Settings",
+          "href": "/dashboard-admin/site-settings"
+        },
+        {
+          "id": "upload-rules",
+          "label": "Upload Rules",
+          "icon": "FileUp",
+          "href": "/dashboard-admin/upload-rules"
+        },
+        {
+          "id": "email-notifications",
+          "label": "Email & Notifications",
+          "icon": "Mail",
+          "href": "/dashboard-admin/email-notifications"
+        }
+      ]
+    }
+  ],
+  "bottomItems": [
+    {
+      "id": "my-account",
+      "label": "My Account",
+      "icon": "User",
+      "href": "/dashboard-admin/my-account"
+    },
+    {
+      "id": "support-tickets",
+      "label": "Support Tickets",
+      "icon": "MessageSquare",
+      "href": "/dashboard-admin/support-tickets"
+    }
+  ]
+}

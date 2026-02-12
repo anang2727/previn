@@ -217,3 +217,25 @@
     animation-delay: 0.5s;
   }
 }
+
+
+/* Admin Dashboard Theme */
+.admin-bg {
+  @apply bg-[#296374];
+}
+
+.admin-bg-hover:hover {
+  @apply bg-[#3a7a90];
+}
+
+.admin-text {
+  @apply text-[#296374];
+}
+
+.admin-border {
+  @apply border-[#296374];
+}
+
+.admin-ring:focus {
+  @apply ring-2 ring-[#296374] ring-offset-2;
+}
