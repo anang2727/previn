@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import { User } from "@supabase/supabase-js"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
-import { createClient } from "@/utils/supabase/client"
+import { createClient } from "@/utils/client"
 import { createBrowserClient } from "@supabase/ssr"
 import { useRouter } from "next/navigation"
 
@@ -92,7 +92,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
     //     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     // )
     const supabase = createClient()
-    
+
     const [currentTime, setCurrentTime] = useState<Date>(new Date())
     const [filter, setFilter] = useState("7")
     const [stats, setStats] = useState(generateData(7))

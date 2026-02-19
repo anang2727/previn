@@ -14,7 +14,7 @@ import {
   LogOut,
   ChevronDown,
 } from 'lucide-react';
-import { createClient } from "@/utils/supabase/client"
+import { createClient } from "@/utils/client"
 import { useRouter } from "next/navigation"
 
 

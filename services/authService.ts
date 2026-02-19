@@ -1,5 +1,5 @@
 // services/authService.ts
-import { createClient } from '@/utils/supabase/client';
+import { createClient } from '@/utils/client';
 
 const supabase = createClient();
 

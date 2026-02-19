@@ -11,7 +11,7 @@ import { FormDivider } from '@/app/components/molecules/divider/FormDivider';
 import { SocialAuthButtons } from '@/app/components/molecules/auth/SocialAuthButton';
 import { AuthFooter } from '@/app/components/molecules/auth/AuthFooter';
 import registerData from '@/data/registerPage.json';
-import { createClient } from '@/utils/supabase/client';
+import { createClient } from '@/utils/client';
 import { authService } from "@/services/authService";
 import { init } from "next/dist/compiled/webpack/webpack";
 import { useRouter } from "next/navigation";

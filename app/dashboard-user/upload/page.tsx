@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import uploadData from '@/data/upload.json';
 import { toast } from 'sonner';
-import { createClient } from '@/utils/supabase/client';
+import { createClient } from '@/utils/client';
 // Interface sesuai SearchPage
 interface UploadedFile {
     id: number;

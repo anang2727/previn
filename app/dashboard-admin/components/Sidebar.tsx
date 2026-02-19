@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import * as Icons from 'lucide-react';
 import adminData from '@/data/adminDashboard.json';
 import { useRouter } from "next/navigation"
-import { createClient } from "@/utils/supabase/client"
+import { createClient } from "@/utils/client"
 
 type IconName = keyof typeof Icons;
 

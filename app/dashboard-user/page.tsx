@@ -1,5 +1,5 @@
 // app/dashboard-user/page.tsx
-import { createClient } from "@/utils/supabase/server"
+import { createClient } from "@/utils/server"
 import DashboardContent from "./DashboardContent"
 import { redirect } from "next/navigation"
 

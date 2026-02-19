@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client';
+import { createClient } from '@/utils/client';
 import { Loader2, AlertCircle, FileX } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';

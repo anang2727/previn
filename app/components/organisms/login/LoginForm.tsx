@@ -10,7 +10,7 @@ import { FormDivider } from '@/app/components/molecules/divider/FormDivider';
 import { SocialAuthButtons } from '@/app/components/molecules/auth/SocialAuthButton';
 import { AuthFooter } from '@/app/components/molecules/auth/AuthFooter';
 import loginData from '@/data/loginPage.json';
-import { createClient } from '@/utils/supabase/client';
+import { createClient } from '@/utils/client';
 import { useRouter } from 'next/navigation';
 import { authService } from "@/services/authService";
 import { toast } from 'sonner';
