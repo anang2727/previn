@@ -1,13 +1,15 @@
-import { createServerClient} from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+    // 1. Buat response awal
     let response = NextResponse.next({
         request: {
             headers: request.headers,
         },
     })
 
+    // 2. Inisialisasi Supabase Client
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -17,7 +19,10 @@ export async function middleware(request: NextRequest) {
                     return request.cookies.getAll()
                 },
                 setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+                    // Sinkronisasi ke request agar getUser() nanti bisa baca token terbaru
+                    cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+
+                    // PENTING: Update response agar browser menerima cookie baru
                     response = NextResponse.next({
                         request,
                     })
@@ -29,32 +34,28 @@ export async function middleware(request: NextRequest) {
         }
     )
 
-    // 1. Cek apakah ada session user
+    // 3. Refresh session (Sangat krusial untuk Vercel/Production)
     const { data: { user } } = await supabase.auth.getUser()
 
-    // 2. Proteksi folder /dashboard-admin
-    if (request.nextUrl.pathname.startsWith('/dashboard-admin')) {
+    // 4. Proteksi Rute
+    const isDashboardAdmin = request.nextUrl.pathname.startsWith('/dashboard-admin')
+    const isDashboardUser = request.nextUrl.pathname.startsWith('/dashboard-user')
+
+    if (isDashboardAdmin || isDashboardUser) {
         if (!user) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
 
-        // Ambil role dari tabel profiles
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single()
+        if (isDashboardAdmin) {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .single()
 
-        if (profile?.role !== 'admin') {
-            // Jika bukan admin, tendang ke dashboard user
-            return NextResponse.redirect(new URL('/dashboard-user', request.url))
-        }
-    }
-
-    // 3. Proteksi folder /dashboard-user agar orang yang belum login tidak bisa masuk
-    if (request.nextUrl.pathname.startsWith('/dashboard-user')) {
-        if (!user) {
-            return NextResponse.redirect(new URL('/login', request.url))
+            if (profile?.role !== 'admin') {
+                return NextResponse.redirect(new URL('/dashboard-user', request.url))
+            }
         }
     }
 
@@ -63,7 +64,9 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        '/dashboard-admin/:path*',
-        '/dashboard-user/:path*',
+        /*
+         * Cocokkan semua request kecuali yang statis
+         */
+        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 }
