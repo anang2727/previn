@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import { User } from "@supabase/supabase-js"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
-import { createClient } from "@/utils/supabase/server"
+import { createClient } from "@/utils/supabase/client"
 import { createBrowserClient } from "@supabase/ssr"
 import { useRouter } from "next/navigation"
 
