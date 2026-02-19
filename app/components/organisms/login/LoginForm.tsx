@@ -1,8 +1,6 @@
 'use client';
 
-import React from "react"
-
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Mail, Eye, EyeOff } from 'lucide-react';
 import { FormInput } from '@/app/components/atom/input/FormInput';
 import { FormCheckbox } from '@/app/components/atom/checkbox/FormCheckbox';
@@ -12,16 +10,66 @@ import { FormDivider } from '@/app/components/molecules/divider/FormDivider';
 import { SocialAuthButtons } from '@/app/components/molecules/auth/SocialAuthButton';
 import { AuthFooter } from '@/app/components/molecules/auth/AuthFooter';
 import loginData from '@/data/loginPage.json';
+import { createClient } from '@/utils/supabase/client';
+import { useRouter } from 'next/navigation';
+import { authService } from "@/services/authService";
+import { toast } from 'sonner';
 
 export function LoginForm() {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const router = useRouter();
+    const supabase = createClient();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Login attempt:', { email, password, rememberMe });
+        setLoading(true);
+        setErrorMessage(null);
+
+        try {
+            // 1. Login
+            await authService.login(email, password);
+
+            // 2. Ambil user instance
+            const { data: { user } } = await supabase.auth.getUser();
+
+            // Di dalam handleSubmit LoginForm.tsx
+            if (user) {
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('full_name, role')
+                    .eq('id', user.id)
+                    .maybeSingle(); // Menggunakan maybeSingle lebih aman daripada single
+
+                if (profileError) throw profileError;
+
+                // Jika profil tidak ditemukan, beri role default agar tidak error
+                if (!profile) {
+                    console.error("Profil tidak ditemukan di database!");
+                    router.push('/dashboard-user');
+                    return;
+                }
+
+                toast.success(`Selamat datang kembali, ${profile.full_name}!`);
+
+                if (profile.role === 'admin') {
+                    router.push('/dashboard-admin');
+                } else {
+                    router.push('/dashboard-user');
+                }
+
+                router.refresh();
+            }
+        } catch (error: any) {
+            setErrorMessage(error.message === 'Invalid login credentials' ? 'Email atau password salah!' : error.message);
+            toast.error('Login gagal: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -32,7 +80,11 @@ export function LoginForm() {
                 title={loginData.form.title}
                 subtitle={loginData.form.subtitle}
             />
-
+            {errorMessage && (
+                <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4">
+                    {errorMessage}
+                </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-5 animate-fade-up delay-100">
                 <FormInput
                     label={loginData.form.email.label}
@@ -78,8 +130,8 @@ export function LoginForm() {
                     onChange={setRememberMe}
                 />
 
-                <AuthButton type="submit" variant="primary" fullWidth>
-                    {loginData.form.submitButton}
+                <AuthButton type="submit" variant="primary" fullWidth disabled={loading}>
+                    {loading ? 'Logging in...' : loginData.form.submitButton}
                 </AuthButton>
             </form>
 

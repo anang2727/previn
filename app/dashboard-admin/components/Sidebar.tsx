@@ -4,10 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as Icons from 'lucide-react';
 import adminData from '@/data/adminDashboard.json';
+import { useRouter } from "next/navigation"
+import { createClient } from "@/utils/supabase/server"
 
 type IconName = keyof typeof Icons;
 
 export function Sidebar() {
+  const router = useRouter();
+  const supabase = createClient();
   const pathname = usePathname();
 
   const getIcon = (iconName: string) => {
@@ -15,6 +19,15 @@ export function Sidebar() {
     return Icon;
   };
 
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      alert("Gagal logout: " + error.message)
+    } else {
+      router.push("/login")
+      router.refresh()
+    }
+  }
   return (
     <aside className="w-64 bg-white border-r border-gray-200 flex flex-col h-screen">
       {/* Header */}
@@ -43,11 +56,10 @@ export function Sidebar() {
                   <Link
                     key={item.id}
                     href={item.href}
-                    className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-                      isActive
+                    className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${isActive
                         ? 'bg-blue-50 text-[#296374] font-medium'
                         : 'text-gray-700 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     <Icon size={18} />
                     <span className="text-sm">{item.label}</span>
@@ -68,20 +80,19 @@ export function Sidebar() {
             <Link
               key={item.id}
               href={item.href}
-              className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-                isActive
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${isActive
                   ? 'bg-blue-50 text-[#296374] font-medium'
                   : 'text-gray-700 hover:bg-gray-50'
-              }`}
+                }`}
             >
               <Icon size={18} />
               <span className="text-sm">{item.label}</span>
             </Link>
           );
         })}
-        <button className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors">
-          <Icons.LogOut size={18} />
-          <span className="text-sm">Logout</span>
+        <button  onClick={handleLogout} className= "cursor-pointer w-full flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors">
+          <Icons.LogOut size={18} className='cursor-pointer'/>
+          <span className="text-sm cursor-pointer">Logout</span>
         </button>
       </div>
     </aside>

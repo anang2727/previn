@@ -1,7 +1,6 @@
 'use client';
 
 import React from "react"
-
 import { useState } from 'react';
 import { Mail, Eye, EyeOff, User } from 'lucide-react';
 import { FormInput } from '@/app/components/atom/input/FormInput';
@@ -12,10 +11,18 @@ import { FormDivider } from '@/app/components/molecules/divider/FormDivider';
 import { SocialAuthButtons } from '@/app/components/molecules/auth/SocialAuthButton';
 import { AuthFooter } from '@/app/components/molecules/auth/AuthFooter';
 import registerData from '@/data/registerPage.json';
+import { createClient } from '@/utils/supabase/client';
+import { authService } from "@/services/authService";
+import { init } from "next/dist/compiled/webpack/webpack";
+import { useRouter } from "next/navigation";
+import { toast } from 'sonner';
 
 export function RegisterForm() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const router = useRouter();
+    const supabase = createClient();
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
@@ -28,9 +35,37 @@ export function RegisterForm() {
         setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Register attempt:', formData);
+        if (formData.password !== formData.confirmPassword) {
+            alert('Password dan konfirmasi password tidak cocok!');
+            return;
+        }
+        if (!formData.agreeTerms) {
+            alert('Anda harus menyetujui syarat dan ketentuan!');
+            return;
+        }
+        setLoading(true);
+        try {
+            await authService.register(
+                formData.email,
+                formData.password,
+                formData.fullName);
+            toast.success('Pendaftaran berhasil! Silahkan cek email Anda atau Login.');
+            router.push('/dashboard-user');
+            router.refresh();
+        } catch (error: any) {
+            toast.error('Pendaftaran gagal: ' + error.message);
+        } finally {
+            setLoading(false);
+            setFormData({
+                fullName: '',
+                email: '',
+                password: '',
+                confirmPassword: '',
+                agreeTerms: false,
+            });
+        }
     };
 
     return (
@@ -122,14 +157,14 @@ export function RegisterForm() {
                     onChange={(checked) => handleChange('agreeTerms', checked)}
                 />
 
-                <AuthButton type="submit" variant="primary" fullWidth>
-                    {registerData.form.submitButton}
+                <AuthButton type="submit" variant="primary" fullWidth disabled={loading}>
+                    {loading ? 'Creating Account...' : registerData.form.submitButton}
                 </AuthButton>
             </form>
 
             <FormDivider text={registerData.form.dividerText} />
 
-            <SocialAuthButtons/>
+            <SocialAuthButtons />
 
             <AuthFooter
                 text={registerData.signIn.text}

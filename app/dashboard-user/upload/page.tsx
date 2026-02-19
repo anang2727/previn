@@ -1,6 +1,6 @@
 'use client';
-import React, { useState } from 'react';
-import { Upload, Globe, Lock, Crown, Link as LinkIcon, Eye, Copy, Trash2, Loader2, CheckCircle2, Check } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Upload, Globe, Lock, Crown, Link as LinkIcon, Eye, Copy, Trash2, Loader2, CheckCircle2, Check, User } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,8 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import uploadData from '@/data/upload.json';
-
+import { toast } from 'sonner';
+import { createClient } from '@/utils/supabase/client';
 // Interface sesuai SearchPage
 interface UploadedFile {
     id: number;
@@ -38,7 +39,9 @@ const UploadPage = () => {
     const [isAgreed, setIsAgreed] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
+    const [userQuota, setUserQuota] = useState({ uses: 0, max: 2147483648 });
     const [resultLink, setResultLink] = useState<UploadedFile | null>(null);
+    const supabase = createClient();
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -47,6 +50,21 @@ const UploadPage = () => {
             setCustomFileName(selectedFile.name.split('.')[0]);
         }
     };
+
+    useEffect(() => {
+        const fetchQuota = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data } = await supabase
+                    .from('user_quotas')
+                    .select('current_usage_bytes, max_size_bytes')
+                    .eq('user_id', user.id)
+                    .single();
+                if (data) setUserQuota({ uses: data.current_usage_bytes, max: data.max_size_bytes });
+            }
+        };
+        fetchQuota();
+    }, []);
 
     const handleCopy = async (text: string) => {
         if (navigator.clipboard && window.isSecureContext) {
@@ -67,35 +85,84 @@ const UploadPage = () => {
         setTimeout(() => setIsCopied(false), 2000);
     };
 
-    const processUpload = () => {
+    const processUpload = async () => {
+        if (!file) return;
         setIsConfigModalOpen(false);
         setIsLoading(true);
 
-        setTimeout(() => {
-            const storedData = window.localStorage.getItem(STORAGE_KEY);
-            const existingFiles: UploadedFile[] = storedData ? JSON.parse(storedData) : [];
+        try {
+            // 1. Cek User
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            if (userError || !user) throw new Error("Silakan login terlebih dahulu");
 
+            // 2. Ambil Quota (Pastikan tabelnya 'user_quotas')
+            const { data: quota, error: quotaError } = await supabase
+                .from('user_quotas')
+                .select('*')
+                .eq('user_id', user.id)
+                .single();
+
+            if (quotaError) throw new Error("Gagal mengambil data kuota");
+
+            // 3. Cek sisa memori
+            if (quota.current_usage_bytes + file.size > quota.max_size_bytes) {
+                toast.error("Kuota Penyimpanan Anda Penuh");
+                setIsLoading(false);
+                return;
+            }
+
+            // 4. Persiapan Path File
+            const fileExt = file.name.split('.').pop();
+            const cleanFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const filePath = `${user.id}/${cleanFileName}`;
+
+            // 5. Upload ke Storage (Langsung supabase.storage)
+            const { error: uploadError } = await supabase.storage
+                .from('user-files')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            // 6. Simpan Metadata ke Database
+            const shortCode = Math.random().toString(36).substring(2, 8);
+            const { data: dbData, error: dbError } = await supabase
+                .from('files')
+                .insert({
+                    user_id: user.id,
+                    file_name: `${customFileName}.${fileExt}`,
+                    file_size: file.size,
+                    storage_path: filePath,
+                    visibility: selectedVisibility,
+                    short_link_code: shortCode
+                })
+                .select()
+                .single();
+
+            if (dbError) throw dbError;
+
+            // 7. Tampilkan Hasil
             const newFileData: UploadedFile = {
-                id: Date.now(),
-                name: `${customFileName}.${file?.name.split('.').pop()}`,
-                size: file ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : "0 MB",
-                link: `https://yourdomain.com/preview/${Date.now()}`,
+                id: dbData.id,
+                name: dbData.file_name,
+                size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+                link: `${window.location.origin}/preview/${shortCode}`,
                 uploadDate: new Date().toLocaleDateString('id-ID'),
                 expiryDate: selectedPlan === 'free' ? "24 Jam" : "Tak Terbatas",
                 content: `File ${selectedVisibility}`,
-                isBookmarked: false
             };
 
-            const updatedFiles = [newFileData, ...existingFiles];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFiles));
-
             setResultLink(newFileData);
-            setIsLoading(false);
             setFile(null);
-            setIsResultModalOpen(true); // BUKA MODAL HASIL DISINI
-        }, 3000);
-    };
+            setIsResultModalOpen(true);
+            toast.success("File berhasil diunggah!");
 
+        } catch (error: any) {
+            console.error("Detail Error:", error);
+            toast.error(error.message || "Terjadi kesalahan saat upload");
+        } finally {
+            setIsLoading(false);
+        }
+    };
     return (
         <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-4 font-sans -mt-20">
             <div className="text-center mb-6">

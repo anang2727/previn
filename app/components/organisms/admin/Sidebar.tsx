@@ -14,6 +14,9 @@ import {
   LogOut,
   ChevronDown,
 } from 'lucide-react';
+import { createClient } from "@/utils/supabase/client"
+import { useRouter } from "next/navigation"
+
 
 const menuItems = [
   {
@@ -78,6 +81,8 @@ const menuItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
+  const router = useRouter();
+  const supabase = createClient();
 
   const toggleDropdown = (label: string) => {
     setOpenDropdowns((prev) =>
@@ -86,7 +91,15 @@ export function Sidebar() {
         : [...prev, label]
     );
   };
-
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      alert("Gagal logout: " + error.message)
+    } else {
+      router.push("/login")
+      router.refresh()
+    }
+  }
   return (
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col hidden md:flex">
       {/* Logo */}
@@ -122,9 +135,8 @@ export function Sidebar() {
                   <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
                   <ChevronDown
                     size={16}
-                    className={`transition-transform duration-200 ${
-                      isDropdownOpen ? 'rotate-180' : ''
-                    }`}
+                    className={`transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''
+                      }`}
                   />
                 </button>
 
@@ -137,11 +149,10 @@ export function Sidebar() {
                         <Link
                           key={subitem.href}
                           href={subitem.href}
-                          className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                            isSubActive
-                              ? 'admin-bg text-white font-medium'
-                              : 'text-gray-600 hover:bg-gray-100'
-                          }`}
+                          className={`block px-3 py-2 rounded-lg text-sm transition-colors ${isSubActive
+                            ? 'admin-bg text-white font-medium'
+                            : 'text-gray-600 hover:bg-gray-100'
+                            }`}
                         >
                           {subitem.label}
                         </Link>
@@ -158,11 +169,10 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                isActive
-                  ? 'admin-bg text-white'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive
+                ? 'admin-bg text-white'
+                : 'text-gray-700 hover:bg-gray-100'
+                }`}
             >
               <Icon size={20} />
               <span className="text-sm font-medium">{item.label}</span>
@@ -173,7 +183,7 @@ export function Sidebar() {
 
       {/* Logout */}
       <div className="p-4 border-t border-gray-200">
-        <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
+        <button onClick={handleLogout} className="cursor-pointer flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
           <LogOut size={20} />
           <span className="text-sm font-medium">Logout</span>
         </button>

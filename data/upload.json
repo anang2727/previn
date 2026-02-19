@@ -12,9 +12,9 @@
       "isPremium": false
     },
     {
-      "id": "unlimited",
-      "name": "Unlimited",
-      "storage": "100 GB",
+      "id": "Premium",
+      "name": "Premium",
+      "storage": "2 GB/month",
       "duration": "Rp.30.000",
       "isPremium": true
     }
