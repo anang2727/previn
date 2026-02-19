@@ -60,8 +60,14 @@ const pageConfig: Record<string, { title: string; description: string; icon: any
   }
 };
 
-export default function AdminPage({ params }: { params: { page: string } }) {
-  const config = pageConfig[params.page];
+export default async function Page({
+  params
+}: {
+  params: Promise<{ page: string }>
+}) {
+  const resolvedParams = await params;
+  const page = resolvedParams.page;
+  const config = pageConfig[page];
 
   if (!config) {
     return <div>Page not found</div>;
