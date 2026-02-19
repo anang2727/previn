@@ -87,11 +87,12 @@ const formatDate = (date: Date) => {
 
 export default function DashboardContent({ user }: DashboardContentProps) {
     const router = useRouter()
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-
+    // const supabase = createBrowserClient(
+    //     process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    //     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    // )
+    const supabase = createClient()
+    
     const [currentTime, setCurrentTime] = useState<Date>(new Date())
     const [filter, setFilter] = useState("7")
     const [stats, setStats] = useState(generateData(7))
@@ -295,7 +296,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                                         </button>
                                     </div>
                                     <div className="border-t-2 border-black p-2 cursor-pointer"
-                                         onClick={handleLogout}>
+                                        onClick={handleLogout}>
                                         <button className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium">
                                             🚪 Keluar
                                         </button>
