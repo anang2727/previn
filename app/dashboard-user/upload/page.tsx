@@ -164,7 +164,7 @@ const UploadPage = () => {
         }
     };
     return (
-        <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-4 font-sans -mt-20">
+        <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-4 pb-20 font-sans md:-mt-20">
             <div className="text-center mb-6">
                 <h1 className="text-4xl font-bold tracking-tight text-slate-900 mb-2">{uploadData.title}</h1>
                 <p className="text-slate-500 font-medium">{uploadData.subtitle}</p>
